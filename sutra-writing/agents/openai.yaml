@@ -1,0 +1,7 @@
+interface:
+  display_name: "Sutra"
+  short_description: "Write concise, precise text, designs, and code"
+  default_prompt: "Use $sutra-writing to make this text, design, or code concise, precise, and easy to verify."
+
+policy:
+  allow_implicit_invocation: true
