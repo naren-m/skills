@@ -13,7 +13,7 @@ The Beads-backed design-to-finishup pipeline lives in [dev-loop](https://github.
 | `cli-for-agents` | Design CLIs that coding agents can run headlessly. |
 | `rules-improver` | Audit and update `.cursorrules` / `.cursor/rules/`. |
 | `automation-recommender` | Recommend hooks, skills, plugins, and MCP servers. |
-| `sutra-writing` | Write clear, concise text and designs; implement the smallest complete code change with explicit errors and focused tests. |
+| [sutra-writing](sutra-writing/README.md) | Write clear, concise text and designs; implement the smallest complete code change with explicit errors and focused tests. |
 
 ## Install in Cursor
 
@@ -36,6 +36,8 @@ cp -R sutra-writing ~/.codex/skills/
 ```
 
 ## Use Sutra
+
+The name comes from the compact rule tradition described in my [Sutra note](https://github.com/naren-m/literature-notes/blob/main/content/domains/humanities/sanskrit-literature/Sutra.md). See the [Sutra Writing README](sutra-writing/README.md) for how that idea applies to this skill.
 
 Invoke `$sutra-writing` when drafting text, reviewing a design, or simplifying code. For example:
 
