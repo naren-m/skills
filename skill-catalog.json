@@ -1,0 +1,12 @@
+{
+  "skills": [
+    {
+      "name": "retro",
+      "url": "https://github.com/mattpocock/skills/tree/main/skills/engineering/retro"
+    },
+    {
+      "name": "show-me",
+      "url": "https://github.com/humanlayer/skills/tree/main/plugins/show-me/skills/show-me"
+    }
+  ]
+}
