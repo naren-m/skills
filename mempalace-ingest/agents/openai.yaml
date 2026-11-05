@@ -1,0 +1,4 @@
+interface:
+  display_name: "MemPalace Ingest"
+  short_description: "Bootstrap MemPalace for one repo or a multi-repo workspace"
+  default_prompt: "Initialize and mine MemPalace for this repo or workspace root"

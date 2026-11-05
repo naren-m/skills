@@ -1,0 +1,7 @@
+interface:
+  display_name: "Talk like Naren"
+  short_description: "Draft direct, factual engineering responses"
+  default_prompt: "Use $talk-like-naren to rewrite this in Naren's direct engineering voice."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Create PPT"
+  short_description: "Create consistent executive PowerPoint decks"
+  brand_color: "#0B7A75"
+  default_prompt: "Use $create-ppt to turn this material into an executive PowerPoint deck."

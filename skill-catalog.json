@@ -7,6 +7,110 @@
     {
       "name": "show-me",
       "url": "https://github.com/humanlayer/skills/tree/main/plugins/show-me/skills/show-me"
+    },
+    {
+      "name": "automation-recommender",
+      "url": "https://github.com/naren-m/skills/tree/main/automation-recommender"
+    },
+    {
+      "name": "cli-for-agents",
+      "url": "https://github.com/naren-m/skills/tree/main/cli-for-agents"
+    },
+    {
+      "name": "rules-improver",
+      "url": "https://github.com/naren-m/skills/tree/main/rules-improver"
+    },
+    {
+      "name": "sutra-writing",
+      "url": "https://github.com/naren-m/skills/tree/main/sutra-writing"
+    },
+    {
+      "name": "create-goal",
+      "url": "https://github.com/naren-m/skills/tree/main/create-goal"
+    },
+    {
+      "name": "create-ppt",
+      "url": "https://github.com/naren-m/skills/tree/main/create-ppt"
+    },
+    {
+      "name": "digital-garden-wiki",
+      "url": "https://github.com/naren-m/skills/tree/main/digital-garden-wiki"
+    },
+    {
+      "name": "mempalace-ingest",
+      "url": "https://github.com/naren-m/skills/tree/main/mempalace-ingest"
+    },
+    {
+      "name": "talk-like-naren",
+      "url": "https://github.com/naren-m/skills/tree/main/talk-like-naren"
+    },
+    {
+      "name": "visualize-design-html",
+      "url": "https://github.com/naren-m/skills/tree/main/visualize-design-html"
+    },
+    {
+      "name": "cavecrew",
+      "url": "https://github.com/JuliusBrussee/caveman/tree/main/skills/cavecrew"
+    },
+    {
+      "name": "caveman",
+      "url": "https://github.com/JuliusBrussee/caveman/tree/main/skills/caveman"
+    },
+    {
+      "name": "caveman-commit",
+      "url": "https://github.com/JuliusBrussee/caveman/tree/main/skills/caveman-commit"
+    },
+    {
+      "name": "caveman-compress",
+      "url": "https://github.com/JuliusBrussee/caveman/tree/main/skills/caveman-compress"
+    },
+    {
+      "name": "caveman-help",
+      "url": "https://github.com/JuliusBrussee/caveman/tree/main/skills/caveman-help"
+    },
+    {
+      "name": "caveman-review",
+      "url": "https://github.com/JuliusBrussee/caveman/tree/main/skills/caveman-review"
+    },
+    {
+      "name": "caveman-stats",
+      "url": "https://github.com/JuliusBrussee/caveman/tree/main/skills/caveman-stats"
+    },
+    {
+      "name": "ponytail",
+      "url": "https://github.com/DietrichGebert/ponytail/tree/main/skills/ponytail"
+    },
+    {
+      "name": "ponytail-audit",
+      "url": "https://github.com/DietrichGebert/ponytail/tree/main/skills/ponytail-audit"
+    },
+    {
+      "name": "ponytail-debt",
+      "url": "https://github.com/DietrichGebert/ponytail/tree/main/skills/ponytail-debt"
+    },
+    {
+      "name": "ponytail-gain",
+      "url": "https://github.com/DietrichGebert/ponytail/tree/main/skills/ponytail-gain"
+    },
+    {
+      "name": "ponytail-help",
+      "url": "https://github.com/DietrichGebert/ponytail/tree/main/skills/ponytail-help"
+    },
+    {
+      "name": "ponytail-review",
+      "url": "https://github.com/DietrichGebert/ponytail/tree/main/skills/ponytail-review"
+    },
+    {
+      "name": "writing-for-agents",
+      "url": "https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents"
+    },
+    {
+      "name": "migrate-to-codex",
+      "url": "https://github.com/openai/skills/tree/main/skills/.curated/migrate-to-codex"
+    },
+    {
+      "name": "grill-me",
+      "url": "https://github.com/mattpocock/skills/tree/main/skills/productivity/grill-me"
     }
   ]
 }
