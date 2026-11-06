@@ -1,0 +1,4 @@
+interface:
+  display_name: "Digital Garden Wiki"
+  short_description: "Maintain this Jekyll LLM wiki"
+  default_prompt: "Use $digital-garden-wiki to ingest, query, lint, or publish my Jekyll digital garden."

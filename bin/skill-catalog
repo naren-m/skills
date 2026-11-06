@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+"""Install selected upstream GitHub skills from a JSON catalog."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from urllib.parse import urlparse
+
+CATALOG = Path(__file__).resolve().parent.parent / "skill-catalog.json"
+MARKER = ".skill-catalog-source.json"
+
+
+def parse_url(url):
+    parsed = urlparse(url)
+    parts = parsed.path.strip("/").split("/")
+    if (parsed.scheme != "https" or parsed.netloc != "github.com" or
+            parsed.query or parsed.fragment or len(parts) < 5 or parts[2] != "tree" or
+            any(not p or p in (".", "..") for p in parts)):
+        raise ValueError("Expected https://github.com/OWNER/REPO/tree/REF/SKILL_PATH")
+    owner, repo, _, ref, *path = parts
+    if not all(re.fullmatch(r"[A-Za-z0-9_.-]+", p) for p in (owner, repo, ref, *path)):
+        raise ValueError("URL has unsupported path characters")
+    if ref.startswith("-"):
+        raise ValueError("Invalid Git reference")
+    return f"https://github.com/{owner}/{repo}.git", ref, "/".join(path)
+
+
+def digest(directory):
+    h = hashlib.sha256()
+    for path in sorted(directory.rglob("*")):
+        rel = path.relative_to(directory).as_posix()
+        if rel == MARKER:
+            continue
+        if path.is_symlink():
+            raise ValueError(f"Skill contains a symlink: {rel}")
+        if path.is_file():
+            h.update(rel.encode() + b"\0")
+            h.update(path.read_bytes())
+            h.update(b"\0")
+    return h.hexdigest()
+
+
+def install(entry, dest, update=False):
+    name, url = entry["name"], entry["url"]
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", name) or name in (".", ".."):
+        raise ValueError(f"Invalid skill name: {name}")
+    repo, ref, path = parse_url(url)
+    target = dest / name
+    old = None
+    if target.exists() or target.is_symlink():
+        if not update or target.is_symlink() or not (target / MARKER).is_file():
+            raise ValueError(f"{target} already exists; preserving it")
+        old = json.loads((target / MARKER).read_text())
+        if old.get("url") != url or old.get("digest") != digest(target):
+            raise ValueError(f"{target} has local changes or a different source; preserving it")
+    dest.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".skill-catalog-", dir=dest) as tmp:
+        tmp = Path(tmp)
+        checkout = tmp / "checkout"
+        subprocess.run(["git", "clone", "--quiet", "--no-checkout", repo, str(checkout)], check=True, timeout=180)
+        subprocess.run(["git", "-C", str(checkout), "checkout", "--quiet", ref], check=True, timeout=180)
+        commit = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
+        source = checkout / path
+        if any((checkout.joinpath(*path.split("/")[:i])).is_symlink() for i in range(1, len(path.split("/")) + 1)):
+            raise ValueError("Skill path contains a symlink")
+        if not source.is_dir() or not (source / "SKILL.md").is_file():
+            raise ValueError(f"{url} does not identify a skill directory containing SKILL.md")
+        if (source / MARKER).exists():
+            raise ValueError(f"Skill uses reserved filename {MARKER}")
+        digest(source)  # Refuse symlinks before copying.
+        staged = tmp / "skill"
+        shutil.copytree(source, staged)
+        (staged / MARKER).write_text(json.dumps({"url": url, "commit": commit, "digest": digest(staged)}, indent=2) + "\n")
+        backup = tmp / "previous"
+        if old is not None:
+            if not target.is_dir() or digest(target) != old.get("digest"):
+                raise ValueError(f"{target} changed during download; preserving it")
+            target.rename(backup)
+        elif target.exists() or target.is_symlink():
+            raise ValueError(f"{target} appeared during download; preserving it")
+        try:
+            staged.rename(target)
+        except OSError:
+            if old is not None:
+                backup.rename(target)
+            raise
+        print(f"Installed {name} at {target} ({commit})")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--catalog", type=Path, default=CATALOG)
+    sub = parser.add_subparsers(dest="command", required=True)
+    add = sub.add_parser("add", help="Add a GitHub skill directory URL")
+    add.add_argument("url")
+    add.add_argument("--name")
+    run = sub.add_parser("install", help="Install all or named skills")
+    run.add_argument("names", nargs="*")
+    run.add_argument("--dest", type=Path, default=Path(os.environ.get("CODEX_HOME", "~/.codex")).expanduser() / "skills")
+    run.add_argument("--update", action="store_true", help="Update unchanged catalog-managed skills")
+    args = parser.parse_args()
+    try:
+        entries = json.loads(args.catalog.read_text())["skills"]
+        if args.command == "add":
+            _, _, path = parse_url(args.url)
+            name = args.name or Path(path).name
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", name):
+                raise ValueError("Invalid skill name")
+            if any(e["name"] == name for e in entries):
+                raise ValueError(f"{name} already exists in the catalog")
+            entries.append({"name": name, "url": args.url})
+            args.catalog.write_text(json.dumps({"skills": entries}, indent=2) + "\n")
+            print(f"Added {name} to {args.catalog}")
+            return 0
+        selected = [e for e in entries if not args.names or e["name"] in args.names]
+        missing = set(args.names) - {e["name"] for e in selected}
+        if missing:
+            raise ValueError("Not in catalog: " + ", ".join(sorted(missing)))
+        failures = 0
+        for entry in selected:
+            try:
+                install(entry, args.dest.expanduser(), args.update)
+            except (ValueError, OSError, subprocess.SubprocessError) as exc:
+                print(f"{entry['name']}: {exc}", file=sys.stderr)
+                failures += 1
+        return int(failures > 0)
+    except (KeyError, ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"catalog: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
