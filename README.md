@@ -54,6 +54,7 @@ The Beads-backed design-to-finishup pipeline lives in [dev-loop](https://github.
 | `create-ppt` | Turn supplied material into an executive PowerPoint deck. |
 | `digital-garden-wiki` | Maintain the personal digital garden and literature notes. |
 | `mempalace-ingest` | Index a repository or workspace with MemPalace. |
+| `ste100-writing` | Write issues, procedures and agent briefs in ASD-STE100 Simplified Technical English, with a check that a rewrite keeps every reference. |
 | [sutra-writing](sutra-writing/README.md) | Write clear, concise text and designs; implement the smallest complete code change with explicit errors and focused tests. |
 | `talk-like-naren` | Write in Naren's direct engineering voice. |
 | `visualize-design-html` | Explain a design in a self-contained HTML page. |
