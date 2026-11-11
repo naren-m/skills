@@ -34,6 +34,9 @@ from OpenAI, and the Caveman and Ponytail skills from their respective authors.
 Catalog installation copies skill directories only; plugin hooks, agents, and
 other files outside those directories need the upstream plugin installation.
 In particular, `caveman-stats` needs the Caveman plugin hooks to show its output.
+`clear-write` (Stayux Clear Answer, ASD-STE100 plain English) needs the upstream plugin for its
+linter and commands: `/plugin marketplace add stayukasabov/Stayux-Clear-Answer`, then
+`/plugin install clear-answer@stayux-clear`.
 Installing the whole catalog fetches each listed skill separately.
 
 `create-goal` uses the `design` and `plan` skills, which must be installed
