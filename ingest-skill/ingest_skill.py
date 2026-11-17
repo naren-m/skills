@@ -129,7 +129,7 @@ def github_token(user):
     return token
 
 
-def publish(checkout, message, extra_env=None, push_header=None, push_remote=None):
+def publish(checkout, message, extra_env=None, push_token=None, push_remote=None):
     status = subprocess.check_output(
         ["git", "-C", str(checkout), "status", "--porcelain", "--", "skill-catalog.json"],
         text=True,
@@ -142,8 +142,13 @@ def publish(checkout, message, extra_env=None, push_header=None, push_remote=Non
     subprocess.run(["git", "-C", str(checkout), "add", "--", "skill-catalog.json"], check=True, env=env)
     subprocess.run(["git", "-C", str(checkout), "commit", "-m", message], check=True, env=env)
     cmd = ["git", "-C", str(checkout)]
-    if push_header:
-        cmd.extend(["-c", f"http.extraheader={push_header}"])
+    if push_token:
+        # The active gh login on this host cannot push naren-m/skills.
+        # Give this push its own token and ignore the saved GitHub credential.
+        env["GH_TOKEN"] = push_token
+        env.pop("GITHUB_TOKEN", None)
+        helper = '!f() { echo username=x-access-token; echo "password=$GH_TOKEN"; }; f'
+        cmd.extend(["-c", "credential.helper=", "-c", f"credential.helper={helper}"])
     if push_remote:
         cmd.extend(["push", push_remote, "HEAD:main"])
     else:
@@ -151,7 +156,7 @@ def publish(checkout, message, extra_env=None, push_header=None, push_remote=Non
     try:
         subprocess.run(cmd, check=True, env=env)
     except subprocess.CalledProcessError as exc:
-        if push_header:
+        if push_token:
             raise ValueError(f"git push failed with status {exc.returncode}") from None
         raise
     return "pushed"
@@ -193,15 +198,15 @@ def main(argv=None):
         published = "skipped"
     else:
         extra_env = {"SKIP_DDTS": "1"} if args.catalog == "personal" else None
-        push_header = push_remote = None
+        push_token = push_remote = None
         if args.catalog == "personal":
-            push_header = "AUTHORIZATION: bearer " + github_token("naren-m")
+            push_token = github_token("naren-m")
             push_remote = "https://github.com/naren-m/skills.git"
         published = publish(
             spec.checkout,
             f"Catalog {name}.\n\nRecord {url} in the {args.catalog} skill catalog.",
             extra_env,
-            push_header,
+            push_token,
             push_remote,
         )
     print(f"{args.catalog} {spec.checkout} {name} {published}")

@@ -189,7 +189,7 @@ def test_publish_uses_the_given_remote_header(tmp_path, monkeypatch):
 
     def run(cmd, **kwargs):
         if "push" in cmd:
-            calls.append(cmd)
+            calls.append((cmd, kwargs.get("env") or {}))
             return subprocess.CompletedProcess(cmd, 0)
         return real_run(cmd, **kwargs)
 
@@ -197,9 +197,11 @@ def test_publish_uses_the_given_remote_header(tmp_path, monkeypatch):
     assert ingest.publish(
         repo,
         "Catalog statechart.",
-        push_header="AUTHORIZATION: bearer secret",
+        push_token="secret",
         push_remote="https://github.com/naren-m/skills.git",
     ) == "pushed"
-    assert calls[0][3] == "-c"
-    assert calls[0][4] == "http.extraheader=AUTHORIZATION: bearer secret"
-    assert calls[0][-2:] == ["https://github.com/naren-m/skills.git", "HEAD:main"]
+    cmd, env = calls[0]
+    assert "secret" not in cmd
+    assert env["GH_TOKEN"] == "secret"
+    assert cmd[3:5] == ["-c", "credential.helper="]
+    assert cmd[-2:] == ["https://github.com/naren-m/skills.git", "HEAD:main"]
