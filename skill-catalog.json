@@ -119,6 +119,10 @@
     {
       "name": "clear-write",
       "url": "https://github.com/stayukasabov/Stayux-Clear-Answer/tree/main/skills/clear-write"
+    },
+    {
+      "name": "ingest-skill",
+      "url": "https://github.com/naren-m/skills/tree/main/ingest-skill"
     }
   ]
 }

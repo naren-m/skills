@@ -39,6 +39,15 @@ linter and commands: `/plugin marketplace add stayukasabov/Stayux-Clear-Answer`,
 `/plugin install clear-answer@stayux-clear`.
 Installing the whole catalog fetches each listed skill separately.
 
+`ingest-skill` adds one GitHub skill URL to this catalog or the work catalog, pushes that catalog change, and installs the skill on this host:
+
+```sh
+python3 ingest-skill/ingest_skill.py personal 'https://github.com/OWNER/REPO/blob/REF/path/SKILL.md'
+python3 ingest-skill/ingest_skill.py work 'https://github.com/OWNER/REPO/tree/REF/path/to/skill'
+```
+
+`personal` uses `/home/nmudivar/src/naren-m-skills` and clones this repo when that directory is missing. `work` uses `/data/hdd/skills` and clones `nmudivar_cisco/skills` when that directory is missing. A checkout with a different origin is left alone.
+
 `create-goal` uses the `design` and `plan` skills, which must be installed
 separately. `create-ppt` uses the Superpowers brainstorming and Presentations
 plugins. `visualize-design-html` uses `grill-me`, which is in this catalog. `create-pr` reads `show-me`, which is also in this catalog, and falls back to built-in views if it is missing.
@@ -49,6 +58,7 @@ The Beads-backed design-to-finishup pipeline lives in [dev-loop](https://github.
 
 | Skill | Purpose |
 | --- | --- |
+| `ingest-skill` | Add a GitHub skill to the personal or work catalog and install it on this host. |
 | `cli-for-agents` | Design CLIs that coding agents can run headlessly. |
 | `create-pr` | Open a PR whose body shows the change: call trees, file trees, pseudocode, or Mermaid (uses `show-me`). |
 | `rules-improver` | Audit and update `.cursorrules` / `.cursor/rules/`. |
