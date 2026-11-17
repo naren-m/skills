@@ -163,22 +163,35 @@ def publish(checkout, message, extra_env=None, push_token=None, push_remote=None
 
 
 def install_host(checkout, name, dests):
+    """Install into the first directory, then link the others at that copy."""
     script = Path(checkout) / "bin" / "skill-catalog"
+    dests = [Path(dest) for dest in dests]
+    primary = dests[0]
+    cmd = [
+        str(script),
+        "--catalog",
+        str(Path(checkout) / "skill-catalog.json"),
+        "install",
+        name,
+        "--update",
+        "--dest",
+        str(primary),
+    ]
+    result = subprocess.run(cmd, text=True, capture_output=True)
+    if result.returncode != 0:
+        return [(primary, (result.stderr or result.stdout).strip())]
+    source = primary / name
     failed = []
-    for dest in dests:
-        cmd = [
-            str(script),
-            "--catalog",
-            str(Path(checkout) / "skill-catalog.json"),
-            "install",
-            name,
-            "--update",
-            "--dest",
-            str(dest),
-        ]
-        result = subprocess.run(cmd, text=True, capture_output=True)
-        if result.returncode != 0:
-            failed.append((dest, (result.stderr or result.stdout).strip()))
+    for dest in dests[1:]:
+        link = dest / name
+        if link.is_symlink() and link.resolve() == source.resolve():
+            continue
+        if link.exists() and not link.is_symlink():
+            continue
+        if link.is_symlink():
+            link.unlink()
+        link.parent.mkdir(parents=True, exist_ok=True)
+        link.symlink_to(source)
     return failed
 
 
@@ -194,6 +207,13 @@ def main(argv=None):
     ensure_checkout(spec)
     prepare(spec.checkout)
     add_entry(spec.checkout / "skill-catalog.json", name, url)
+    failed = []
+    if not args.no_install:
+        failed = install_host(spec.checkout, name, HOST_DESTS)
+        for dest, err in failed:
+            print(f"{name}: {dest}: {err}", file=sys.stderr)
+        if not failed:
+            print(f"installed {name} at {HOST_DESTS[0] / name}")
     if args.no_push:
         published = "skipped"
     else:
@@ -210,11 +230,6 @@ def main(argv=None):
             push_remote,
         )
     print(f"{args.catalog} {spec.checkout} {name} {published}")
-    if args.no_install:
-        return 0
-    failed = install_host(spec.checkout, name, HOST_DESTS)
-    for dest, err in failed:
-        print(f"{name}: {dest}: {err}", file=sys.stderr)
     return int(bool(failed))
 
 

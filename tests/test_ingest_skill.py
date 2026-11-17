@@ -113,25 +113,47 @@ def test_add_entry_is_idempotent_and_refuses_a_different_url(tmp_path):
         ingest.add_entry(catalog_path, "statechart", url + "-other")
 
 
-def test_install_updates_each_host_destination(tmp_path, monkeypatch):
+def test_install_clones_once_and_links_the_other_dirs(tmp_path, monkeypatch):
     checkout = tmp_path / "repo"
     (checkout / "bin").mkdir(parents=True)
     calls = []
 
     def run(cmd, **kwargs):
         calls.append(cmd)
+        installed = Path(cmd[-1]) / "statechart"
+        installed.mkdir(parents=True)
+        (installed / "SKILL.md").write_text("skill")
         return subprocess.CompletedProcess(cmd, 0, stdout="ok\n", stderr="")
 
     monkeypatch.setattr(ingest.subprocess, "run", run)
     dests = [tmp_path / "cursor", tmp_path / "codex"]
     failed = ingest.install_host(checkout, "statechart", dests)
     assert failed == []
-    assert len(calls) == 2
-    assert calls[0][1:4] == ["--catalog", str(checkout / "skill-catalog.json"), "install"]
-    assert "statechart" in calls[0]
-    assert "--update" in calls[0]
+    assert len(calls) == 1
     assert calls[0][-1] == str(dests[0])
-    assert calls[1][-1] == str(dests[1])
+    link = dests[1] / "statechart"
+    assert link.is_symlink()
+    assert link.resolve() == (dests[0] / "statechart").resolve()
+
+
+def test_install_leaves_an_existing_skill_directory(tmp_path, monkeypatch):
+    checkout = tmp_path / "repo"
+    (checkout / "bin").mkdir(parents=True)
+    kept = tmp_path / "codex" / "statechart"
+    kept.mkdir(parents=True)
+    (kept / "SKILL.md").write_text("local")
+
+    def run(cmd, **kwargs):
+        installed = Path(cmd[-1]) / "statechart"
+        installed.mkdir(parents=True)
+        (installed / "SKILL.md").write_text("skill")
+        return subprocess.CompletedProcess(cmd, 0, stdout="ok\n", stderr="")
+
+    monkeypatch.setattr(ingest.subprocess, "run", run)
+    failed = ingest.install_host(checkout, "statechart", [tmp_path / "cursor", tmp_path / "codex"])
+    assert failed == []
+    assert not kept.is_symlink()
+    assert (kept / "SKILL.md").read_text() == "local"
 
 
 def _git(repo, *args):
