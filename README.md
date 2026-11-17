@@ -46,7 +46,7 @@ python3 ingest-skill/ingest_skill.py personal 'https://github.com/OWNER/REPO/blo
 python3 ingest-skill/ingest_skill.py work 'https://github.com/OWNER/REPO/tree/REF/path/to/skill'
 ```
 
-`personal` uses `/home/nmudivar/src/naren-m-skills` and clones this repo when that directory is missing. `work` uses `/data/hdd/skills` and clones `nmudivar_cisco/skills` when that directory is missing. A checkout with a different origin is left alone.
+`personal` uses `/data/hdd/naren-m-skills` and clones this repo when that directory is missing. `work` uses `/data/hdd/skills` and clones `nmudivar_cisco/skills` when that directory is missing. A checkout with a different origin is left alone.
 
 `create-goal` uses the `design` and `plan` skills, which must be installed
 separately. `create-ppt` uses the Superpowers brainstorming and Presentations

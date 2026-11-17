@@ -28,7 +28,7 @@ def catalog(name):
     if name == "personal":
         return Catalog(
             name,
-            Path("/home/nmudivar/src/naren-m-skills"),
+            Path("/data/hdd/naren-m-skills"),
             "https://github.com/naren-m/skills.git",
             "naren-m/skills",
         )

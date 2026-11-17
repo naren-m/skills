@@ -8,15 +8,15 @@ description: Use when adding a GitHub skill URL to the personal or work catalog,
 Record an upstream skill in one catalog and install it on this host. Run the script. Do not clone a catalog, edit `skill-catalog.json`, or copy skill files yourself.
 
 ```sh
-python3 /home/nmudivar/src/naren-m-skills/ingest-skill/ingest_skill.py personal 'https://github.com/OWNER/REPO/blob/REF/path/SKILL.md'
-python3 /home/nmudivar/src/naren-m-skills/ingest-skill/ingest_skill.py work 'https://github.com/OWNER/REPO/tree/REF/path/to/skill'
+python3 /data/hdd/naren-m-skills/ingest-skill/ingest_skill.py personal 'https://github.com/OWNER/REPO/blob/REF/path/SKILL.md'
+python3 /data/hdd/naren-m-skills/ingest-skill/ingest_skill.py work 'https://github.com/OWNER/REPO/tree/REF/path/to/skill'
 ```
 
 ## Catalogs
 
 | Input | Checkout | Clone when the directory is missing |
 | --- | --- | --- |
-| `personal` | `/home/nmudivar/src/naren-m-skills` | `https://github.com/naren-m/skills.git` |
+| `personal` | `/data/hdd/naren-m-skills` | `https://github.com/naren-m/skills.git` |
 | `work` | `/data/hdd/skills` | `git@github.com:nmudivar_cisco/skills.git` |
 
 A checkout whose origin is a different repository is left alone.
@@ -38,5 +38,5 @@ Return the script's catalog line and any install errors.
 Work catalog, statechart from cursor/plugins:
 
 ```sh
-python3 /home/nmudivar/src/naren-m-skills/ingest-skill/ingest_skill.py work 'https://github.com/cursor/plugins/blob/main/pstack/skills/statechart/SKILL.md'
+python3 /data/hdd/naren-m-skills/ingest-skill/ingest_skill.py work 'https://github.com/cursor/plugins/blob/main/pstack/skills/statechart/SKILL.md'
 ```

@@ -45,7 +45,7 @@ def test_skill_url_rejects_non_skill_blob():
 def test_catalog_paths():
     personal = ingest.catalog("personal")
     work = ingest.catalog("work")
-    assert personal.checkout == Path("/home/nmudivar/src/naren-m-skills")
+    assert personal.checkout == Path("/data/hdd/naren-m-skills")
     assert personal.owner_repo == "naren-m/skills"
     assert work.checkout == Path("/data/hdd/skills")
     assert work.owner_repo == "nmudivar_cisco/skills"
