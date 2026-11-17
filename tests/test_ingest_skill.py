@@ -172,3 +172,34 @@ def test_publish_commits_and_pushes_only_the_catalog(tmp_path, monkeypatch):
     dirty = subprocess.check_output(["git", "-C", str(repo), "status", "--porcelain"], text=True)
     assert "README.md" in dirty
     assert "skill-catalog.json" not in dirty
+
+
+def test_publish_uses_the_given_remote_header(tmp_path, monkeypatch):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "test@example.com")
+    _git(repo, "config", "user.name", "test")
+    (repo / "skill-catalog.json").write_text('{"skills": []}\n')
+    _git(repo, "add", "skill-catalog.json")
+    _git(repo, "commit", "-q", "-m", "init")
+    (repo / "skill-catalog.json").write_text('{"skills": [{"name": "statechart", "url": "https://github.com/a/b/tree/main/statechart"}]}\n')
+    calls = []
+    real_run = subprocess.run
+
+    def run(cmd, **kwargs):
+        if "push" in cmd:
+            calls.append(cmd)
+            return subprocess.CompletedProcess(cmd, 0)
+        return real_run(cmd, **kwargs)
+
+    monkeypatch.setattr(ingest.subprocess, "run", run)
+    assert ingest.publish(
+        repo,
+        "Catalog statechart.",
+        push_header="AUTHORIZATION: bearer secret",
+        push_remote="https://github.com/naren-m/skills.git",
+    ) == "pushed"
+    assert calls[0][3] == "-c"
+    assert calls[0][4] == "http.extraheader=AUTHORIZATION: bearer secret"
+    assert calls[0][-2:] == ["https://github.com/naren-m/skills.git", "HEAD:main"]

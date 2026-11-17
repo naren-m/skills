@@ -26,7 +26,7 @@ A checkout whose origin is a different repository is left alone.
 1. Accept a `tree` URL of the skill directory, or a `blob` URL whose last segment is `SKILL.md` or `SKILL`. The catalog URL is the directory that contains that file.
 2. Fast-forward `main` when the checkout is clean. Stop when the branch is not `main` or the tree is dirty.
 3. Append the skill name and tree URL to `skill-catalog.json`. The same name and URL is a no-op. The same name with a different URL stops.
-4. Commit `skill-catalog.json` and push `origin`.
+4. Commit `skill-catalog.json` and push. Personal uses the `naren-m` login from `gh`. Work uses the checkout's `origin`.
 5. Install that one skill with `bin/skill-catalog install --update` into `~/.cursor/skills`, `~/.codex/skills`, and `~/.agents/skills`.
 
 An install that already has local edits is preserved. Say so, and do not delete it.

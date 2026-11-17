@@ -122,7 +122,14 @@ def add_entry(catalog_path, name, url):
     Path(catalog_path).write_text(json.dumps(data, indent=2) + "\n")
 
 
-def publish(checkout, message, extra_env=None):
+def github_token(user):
+    token = subprocess.check_output(["gh", "auth", "token", "--hostname", "github.com", "--user", user], text=True).strip()
+    if not token:
+        raise ValueError(f"gh has no github.com token for {user}")
+    return token
+
+
+def publish(checkout, message, extra_env=None, push_header=None, push_remote=None):
     status = subprocess.check_output(
         ["git", "-C", str(checkout), "status", "--porcelain", "--", "skill-catalog.json"],
         text=True,
@@ -134,7 +141,19 @@ def publish(checkout, message, extra_env=None):
         env.update(extra_env)
     subprocess.run(["git", "-C", str(checkout), "add", "--", "skill-catalog.json"], check=True, env=env)
     subprocess.run(["git", "-C", str(checkout), "commit", "-m", message], check=True, env=env)
-    subprocess.run(["git", "-C", str(checkout), "push", "origin", "HEAD"], check=True, env=env)
+    cmd = ["git", "-C", str(checkout)]
+    if push_header:
+        cmd.extend(["-c", f"http.extraheader={push_header}"])
+    if push_remote:
+        cmd.extend(["push", push_remote, "HEAD:main"])
+    else:
+        cmd.extend(["push", "origin", "HEAD"])
+    try:
+        subprocess.run(cmd, check=True, env=env)
+    except subprocess.CalledProcessError as exc:
+        if push_header:
+            raise ValueError(f"git push failed with status {exc.returncode}") from None
+        raise
     return "pushed"
 
 
@@ -174,10 +193,16 @@ def main(argv=None):
         published = "skipped"
     else:
         extra_env = {"SKIP_DDTS": "1"} if args.catalog == "personal" else None
+        push_header = push_remote = None
+        if args.catalog == "personal":
+            push_header = "AUTHORIZATION: bearer " + github_token("naren-m")
+            push_remote = "https://github.com/naren-m/skills.git"
         published = publish(
             spec.checkout,
             f"Catalog {name}.\n\nRecord {url} in the {args.catalog} skill catalog.",
             extra_env,
+            push_header,
+            push_remote,
         )
     print(f"{args.catalog} {spec.checkout} {name} {published}")
     if args.no_install:
