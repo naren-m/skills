@@ -48,6 +48,7 @@ The Beads-backed design-to-finishup pipeline lives in [dev-loop](https://github.
 | --- | --- |
 | `cli-for-agents` | Design CLIs that coding agents can run headlessly. |
 | `rules-improver` | Audit and update `.cursorrules` / `.cursor/rules/`. |
+| `sweep` | Find stale TODOs, specs, rules, and memory, then propose archive, update, or cut. |
 | `automation-recommender` | Recommend hooks, skills, plugins, and MCP servers. |
 | `create-goal` | Turn an idea into an approved design, plan, and Codex goal. |
 | `create-ppt` | Turn supplied material into an executive PowerPoint deck. |
