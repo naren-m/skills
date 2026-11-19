@@ -131,6 +131,10 @@
     {
       "name": "help-me-understand",
       "url": "https://github.com/naren-m/skills/tree/main/help-me-understand"
+    },
+    {
+      "name": "in-your-own-words",
+      "url": "https://github.com/cursor/plugins/tree/main/pstack/skills/in-your-own-words"
     }
   ]
 }
