@@ -123,6 +123,14 @@
     {
       "name": "ingest-skill",
       "url": "https://github.com/naren-m/skills/tree/main/ingest-skill"
+    },
+    {
+      "name": "teachme",
+      "url": "https://github.com/naren-m/skills/tree/main/teachme"
+    },
+    {
+      "name": "help-me-understand",
+      "url": "https://github.com/naren-m/skills/tree/main/help-me-understand"
     }
   ]
 }

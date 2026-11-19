@@ -1,0 +1,7 @@
+interface:
+  display_name: "Teach me"
+  short_description: "First-principles lesson: inventor's seat, picture first, then a grill"
+  default_prompt: "Use $teachme to teach me this from first principles, one layer at a time, and grill me at the end."
+
+policy:
+  allow_implicit_invocation: true

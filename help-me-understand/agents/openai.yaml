@@ -1,0 +1,7 @@
+interface:
+  display_name: "Help me understand"
+  short_description: "One-pass first-principles explanation, picture first"
+  default_prompt: "Use $help-me-understand to explain this from first principles, starting with a picture."
+
+policy:
+  allow_implicit_invocation: true
