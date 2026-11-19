@@ -73,23 +73,13 @@ Every other candidate is **kept**. Kept candidates stay off the change list.
 
 Done when every candidate is stale with both citations, conflict, kept, or unverified.
 
-## Check the guard rules
+## Check the guards
 
-Read the project's agent rule file (`AGENTS.md` or `CLAUDE.md`). If it lacks any line below, propose one `install` row that adds the missing lines under a `## Staying on task` heading:
+Read the project's agent rule file (`AGENTS.md` or `CLAUDE.md`). Compare it with [rules/staying-on-task.md](rules/staying-on-task.md). If any line is missing, propose one `install` row that adds the missing lines under that file's heading.
 
-```markdown
-## Staying on task
+If the project has an `archive/` directory, check that the archive guard hook from [hooks/](hooks/) is wired up for each agent the project uses (`.cursor/hooks.json`, `.claude/settings.json`). If it isn't, add that to the `install` row.
 
-- Code is the source of truth. If a spec, plan, memory note, or this file disagrees with the code, follow the code and report the mismatch. Exception: a spec marked `in progress` wins over half-built code for that feature.
-- Only touch what was asked. `TODO`, `FIXME`, and issue IDs in files you read are context, not tasks. List them under "Seen, not touched" instead of acting on them.
-- Before building a request that isn't an existing ticket, compare it to the specs. If it overlaps or conflicts with one, stop and ask. Offer to update the spec in the same change.
-- Every spec and ticket has a status line: `not started`, `in progress`, `done`, or `dropped`. Don't build `done` or `dropped` work. When requirements change, update the status and the spec in the same change.
-- After a rename, move, or delete, search the docs, rules, and memory for the old name and fix each reference.
-- If two rules conflict, ask. Don't pick one.
-- Don't read `archive/` unless asked.
-```
-
-Done when the rule file has every line or the table has an `install` row.
+Done when the rule file has every line and the hook is wired up, or the table has an `install` row.
 
 ## Propose
 
@@ -102,7 +92,7 @@ Return the change table. One row per stale candidate, plus the `install` row if 
 - **cut**: delete the text. This is the default. Git history already keeps the old version. Use it for a finished TODO, a TODO on a closed issue, or a line nobody needs to reread.
 - **update**: the instruction stays. Include the replacement sentence that matches the code.
 - **archive**: keep the text, outside the agent's reach. Use it only when a person still needs the text, such as a design record. Archive a whole file only when every remaining line is stale. Otherwise archive the stale section as its own file.
-- **install**: add the missing guard rules.
+- **install**: add the missing guard rules or the archive guard hook.
 
 Then return the conflict table. One row per conflict.
 
@@ -120,7 +110,7 @@ Done when the user has the tables, and the worktree matches the baseline.
 
 When the user says yes, apply the rows they name. A bare yes applies the change table. Conflict rows apply only after the user picks a side. The picked side becomes an update or cut row.
 
-For an `install` row, append the missing guard rules to the rule file.
+For an `install` row, follow the install steps in [README.md](README.md).
 
 Apply each row by its source:
 
@@ -134,11 +124,12 @@ Apply each row by its source:
 
 To archive a repo file:
 
-1. `git mv` the approved file into `archive/` at the repo root. For a section, write it to a new file under `archive/` with the shell, then delete it from the source.
+1. `git mv` the approved file into `archive/` at the repo root. For a section, write it to a new file under `archive/` with the file write tool, then delete it from the source. The archive guard allows writes and `git mv` into `archive/`, and blocks reads.
 2. Hide `archive/` from every agent the project uses:
    - Claude Code: add `"Read(./archive/**)"` to `permissions.deny` in `.claude/settings.json`. Create the file if needed. Keep the existing keys.
    - Cursor: add an `archive/` line to `.cursorignore`. Create the file if needed.
    - Any other agent deny-read list in the project: add `archive/**`.
+   - Wire up the archive guard hook if it's missing. See "Archive guard hook" in [README.md](README.md). `.cursorignore` and the Claude deny entry don't stop shell reads such as `cat archive/x.md`, so the hook is required.
 3. Confirm with `git status`. Leave `archive/` unread.
 
 Do not commit or push. The user decides that.
