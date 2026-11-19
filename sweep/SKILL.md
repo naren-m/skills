@@ -8,24 +8,35 @@ disable-model-invocation: true
 
 List stale instructions in this project and propose archive, update, or cut. The run stops at that list. Apply runs only after the user approves rows.
 
+Stale text costs agents more than it costs people. A person skims past an old `TODO`. An agent reads it as a task, follows it, and builds on it.
+
+## Baseline
+
+Before Collect, record `git status --porcelain` and `git stash list`. Collect, Prove, and Propose are read-only. Compare against this baseline at the end of Propose.
+
 ## Collect
 
 List candidates from this project only:
 
-- `TODO` and `FIXME` comments. Record the ticket ID when the comment has one: a Jira key (`ABC-123`) or a CDETS ID (`CSCab12345`).
-- Plans in `specs/`
-- Lines in `CLAUDE.md` and the agent rule files (`AGENTS.md`, `.cursorrules`, `.cursor/rules/`)
-- Memory entries loaded for this project
-- Tickets whose status line is `not started`, `in progress`, `done`, or `dropped`
-- Pairs of rule or memory lines that tell the agent opposite things
+- `TODO` and `FIXME` comments. Record any issue ID they name: `TODO(#123)`, `TODO(bug/123)`, `FIXME(PROJ-42)`, a CDETS ID (`CSCab12345`), or a tracker URL.
+- Plans in `specs/`, `docs/plans/`, and any plan directory the project's `AGENTS.md` names.
+- Lines in `CLAUDE.md` and the agent rule files (`AGENTS.md`, `.cursorrules`, `.cursor/rules/`).
+- Memory entries loaded for this project. Record each entry's file path, even when it is outside the repo.
+- Tickets for this project whose status line is `not started`, `in progress`, `done`, or `dropped`, and plans or tickets with no status line. Ticket sources are files in the repo, GitHub issues of this repo, and Beads issues. For a shared Beads DB, keep only issues whose label, prefix, or title names this project.
 
-Done when each source is listed or marked absent.
+Keep only candidates that make a checkable claim. A checkable claim names a path, symbol, command, flag, or version. It can also name a branch, host, IP, URL, issue ID, or behavior. Drop style and tone rules, such as "write short sentences". They cannot go stale against code. Keep a style rule only when another rule or memory entry tells the agent the opposite. Record the pair as one candidate.
+
+Done when each source is listed or marked absent, and every candidate has a location.
 
 ## Prove
 
-A fresh subagent decides which candidates are stale. Pass the candidate text and its location. Pass nothing else, so the subagent can't be steered toward a verdict.
+Fresh subagents decide which candidates are stale. Pass each subagent the candidate text and its location. Pass nothing else. Send at most 30 candidates to one subagent. Run more subagents for more candidates.
 
-The subagent compares each candidate to the current app and to git history (`git blame`, `git log -S`, `git log -L` on the lines, and the files the text names).
+The subagent checks each candidate against these sources:
+
+- Code and git history: `git blame`, `git log -S`, and the files the text names.
+- The issue tracker, when the candidate names an issue ID: `gh issue view N --json state,closedAt,stateReason`, `bd show <id>`, the Atlassian tools for Jira keys, or the CDETS client available in the session for CDETS IDs.
+- Live state, when the claim is about the outside world, such as a host, IP, port, service, or deploy target. Use only read-only commands, such as `kubectl get`, `curl -sI`, or `ssh -o BatchMode=yes host true`.
 
 A ticket is stale when its status line disagrees with what is built:
 
@@ -38,25 +49,29 @@ A ticket is stale when its status line disagrees with what is built:
 
 A plan or ticket with no status line is stale. Propose an update that adds one.
 
-A `TODO` with a ticket ID needs the ticket's live status. Look up Jira keys with the Atlassian tools. Look up CDETS IDs with the CDETS client available in the session. Then read the ticket history and the history of the lines around the comment to decide whether the comment still guards the code:
-
-| Ticket status | Comment still guards the code | Result |
-| --- | --- | --- |
-| Closed: fixed, verified, won't fix, duplicate | No | stale, cut |
-| Closed | Yes, for example it warns that the bug returns if the code goes | stale, update: drop the ticket ID and keep the warning |
-| Open | Any | kept |
-| Lookup failed | Any | kept, listed as unchecked |
-
 Mark a candidate **stale** only with both citations:
 
-- current code, behavior, or ticket status that contradicts the text
-- the file, commit, or ticket change that shows the text is behind that code
+1. **Contradiction**: current code, live state, or tracker state that disagrees with the text.
+2. **Lag**: the commit, file, or tracker event that shows the text is older than that state.
 
-Mark a candidate **conflict** when it contradicts the code but nothing shows which side is behind. Two rule or memory lines that contradict each other are a conflict too. Conflicts get no proposed action. The user picks the side.
+Valid citation pairs, in order of strength:
+
+| Candidate | Contradiction | Lag |
+| --- | --- | --- |
+| `TODO(#N)` | Issue N is closed as completed or not planned | Close date, or the commit that fixed it, is after the TODO's `git blame` date |
+| Rule or doc line | Code shows different behavior | `git log -S` commit that changed the code, after the line's blame date |
+| Rule naming a host or IP | Read-only live check fails or shows a different value | Commit or memory entry that records the change |
+| Ticket status line | The table above | Commit that built or removed the behavior |
+
+A `TODO` whose issue is still open is **kept**. Acting on it is scope creep, not cleanup. Some candidates cannot be checked, for example when a host is down or the tracker needs auth. Keep them, and list them under "Unverified" with the reason.
+
+A `TODO` on a closed issue can still guard the code, for example by warning that the bug returns if a line goes. Check the issue history and `git log -L` on the lines around the comment. If the warning still holds, the action is update: drop the issue ID and keep the warning.
+
+Mark a candidate **conflict** when it contradicts the code, but nothing shows which side is behind. A pair of rule or memory lines that contradict each other is a conflict too. Conflicts get no proposed action. The user picks the side.
 
 Every other candidate is **kept**. Kept candidates stay off the change list.
 
-Done when every candidate is stale with both citations, conflict, or kept.
+Done when every candidate is stale with both citations, conflict, kept, or unverified.
 
 ## Check the guard rules
 
@@ -66,7 +81,7 @@ Read the project's agent rule file (`AGENTS.md` or `CLAUDE.md`). If it lacks any
 ## Staying on task
 
 - Code is the source of truth. If a spec, plan, memory note, or this file disagrees with the code, follow the code and report the mismatch. Exception: a spec marked `in progress` wins over half-built code for that feature.
-- Only touch what was asked. `TODO`, `FIXME`, and ticket IDs in files you read are context, not tasks. List them under "Seen, not touched" instead of acting on them.
+- Only touch what was asked. `TODO`, `FIXME`, and issue IDs in files you read are context, not tasks. List them under "Seen, not touched" instead of acting on them.
 - Before building a request that isn't an existing ticket, compare it to the specs. If it overlaps or conflicts with one, stop and ask. Offer to update the spec in the same change.
 - Every spec and ticket has a status line: `not started`, `in progress`, `done`, or `dropped`. Don't build `done` or `dropped` work. When requirements change, update the status and the spec in the same change.
 - After a rename, move, or delete, search the docs, rules, and memory for the old name and fix each reference.
@@ -82,11 +97,11 @@ Return the change table. One row per stale candidate, plus the `install` row if 
 
 | Location | Action | Why |
 | --- | --- | --- |
-| path:line | archive, update, cut, or install | both citations |
+| path:line, memory file, or ticket ID | archive, update, cut, or install | both citations |
 
-- **archive**: keep the text, outside the agent's context. Archive a whole file only when every remaining line is stale. Otherwise archive the stale section as its own file.
+- **cut**: delete the text. This is the default. Git history already keeps the old version. Use it for a finished TODO, a TODO on a closed issue, or a line nobody needs to reread.
 - **update**: the instruction stays. Include the replacement sentence that matches the code.
-- **cut**: delete the text. Use this for a finished TODO, or a line nobody needs to reread.
+- **archive**: keep the text, outside the agent's reach. Use it only when a person still needs the text, such as a design record. Archive a whole file only when every remaining line is stale. Otherwise archive the stale section as its own file.
 - **install**: add the missing guard rules.
 
 Then return the conflict table. One row per conflict.
@@ -95,19 +110,37 @@ Then return the conflict table. One row per conflict.
 | --- | --- | --- |
 | path:line | quoted text | path:line and what it shows |
 
-List unchecked TODOs under the tables, one line each.
+After the tables, list the "Unverified" candidates with the reason for each.
 
-This step writes nothing. If a tool wrote a file, restore it before showing the tables.
+This step writes nothing. Run `git status --porcelain` again. If any path changed since the baseline, restore only those paths with `git restore <path>`. Leave the baseline changes alone.
 
-Done when the user has the tables and the worktree has no sweep edits.
+Done when the user has the tables, and the worktree matches the baseline.
 
 ## Apply
 
 When the user says yes, apply the rows they name. A bare yes applies the change table. Conflict rows apply only after the user picks a side. The picked side becomes an update or cut row.
 
-- **update**: write the approved sentence.
-- **cut**: delete the approved text.
-- **install**: append the missing guard rules to the rule file.
-- **archive**: `git mv` the approved file into `archive/` at the repo root. For a section, write that section to a new file under `archive/` with the shell, then delete it from the source. After the move, add an `archive/` line to `.cursorignore` (create the file if needed). If the project already has an agent deny-read list, add `archive/**` there too. Confirm with `git status`. Leave `archive/` unread.
+For an `install` row, append the missing guard rules to the rule file.
 
-Done when every approved row matches the tree, unapproved rows are unchanged, and `.cursorignore` contains `archive/` if anything was archived.
+Apply each row by its source:
+
+| Source | update | cut | archive |
+| --- | --- | --- | --- |
+| Repo file | Write the approved sentence | Delete the approved text | See below |
+| Memory file | Edit the memory file | Delete the memory file and its line in `MEMORY.md` | Same as cut. Memory has no archive. |
+| Beads issue | `bd update <id>` with the new status | `bd close <id> --reason "<citations>"` | Same as cut |
+| GitHub issue | Comment with the citations. Do not change state. | Comment with the citations. Ask the user before closing. | Same as cut |
+| Jira or CDETS ticket | Comment with the citations. Do not change state. | Comment with the citations. Ask the user before closing. | Same as cut |
+
+To archive a repo file:
+
+1. `git mv` the approved file into `archive/` at the repo root. For a section, write it to a new file under `archive/` with the shell, then delete it from the source.
+2. Hide `archive/` from every agent the project uses:
+   - Claude Code: add `"Read(./archive/**)"` to `permissions.deny` in `.claude/settings.json`. Create the file if needed. Keep the existing keys.
+   - Cursor: add an `archive/` line to `.cursorignore`. Create the file if needed.
+   - Any other agent deny-read list in the project: add `archive/**`.
+3. Confirm with `git status`. Leave `archive/` unread.
+
+Do not commit or push. The user decides that.
+
+Done when every approved row matches the tree or tracker, unapproved rows are unchanged, and each archive deny entry exists.
