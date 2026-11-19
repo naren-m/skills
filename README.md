@@ -70,6 +70,8 @@ The Beads-backed design-to-finishup pipeline lives in [dev-loop](https://github.
 | `mempalace-ingest` | Index a repository or workspace with MemPalace. |
 | [sutra-writing](sutra-writing/README.md) | Write clear, concise text and designs; implement the smallest complete code change with explicit errors and focused tests. |
 | `talk-like-naren` | Write in Naren's direct engineering voice. |
+| `teachme` | Teach a concept from first principles, one layer at a time: inventor's seat, picture first, check questions, then a grill round (uses `grill-me`'s method). |
+| `help-me-understand` | Explain a link, error, or concept from first principles in one reply, picture first; hands off to `teachme` to go deeper. |
 | `visualize-design-html` | Explain a design in a self-contained HTML page. |
 
 ## Install in Cursor
