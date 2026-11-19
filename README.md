@@ -62,7 +62,7 @@ The Beads-backed design-to-finishup pipeline lives in [dev-loop](https://github.
 | `cli-for-agents` | Design CLIs that coding agents can run headlessly. |
 | `create-pr` | Open a PR whose body shows the change: call trees, file trees, pseudocode, or Mermaid (uses `show-me`). |
 | `rules-improver` | Audit and update `.cursorrules` / `.cursor/rules/`. |
-| `sweep` | Find stale TODOs, specs, rules, and memory, then propose archive, update, or cut. |
+| [sweep](sweep/README.md) | Find stale TODOs, specs, rules, and memory, then propose archive, update, or cut. |
 | `automation-recommender` | Recommend hooks, skills, plugins, and MCP servers. |
 | `create-goal` | Turn an idea into an approved design, plan, and Codex goal. |
 | `create-ppt` | Turn supplied material into an executive PowerPoint deck. |
@@ -78,7 +78,7 @@ The Beads-backed design-to-finishup pipeline lives in [dev-loop](https://github.
 git clone https://github.com/naren-m/skills.git
 cd skills
 mkdir -p ~/.cursor/skills
-for s in cli-for-agents rules-improver automation-recommender sutra-writing; do
+for s in cli-for-agents rules-improver automation-recommender sutra-writing sweep; do
   ln -sfn "$(pwd)/$s" ~/.cursor/skills/$s
 done
 ```
