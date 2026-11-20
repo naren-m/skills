@@ -19,7 +19,7 @@ Sweep does the same for one project, and covers specs, rules, and memory too.
 | `hooks/archive_guard.py` | Blocks agent reads of `archive/`, allows writes and `git mv` into it | Each project, per agent |
 | `hooks/cursor-hooks.json` | Cursor hook config for the archive guard | Merged into `.cursor/hooks.json` |
 | `hooks/claude-settings.json` | Claude Code hook config and deny rule | Merged into `.claude/settings.json` |
-| `hooks/todo_check.py` | Git pre-commit check: new `TODO`/`FIXME` must name a ticket | Each project's pre-commit hook |
+| `hooks/todo_check.py` | New `TODO`/`FIXME` must name a ticket. Git pre-commit check, and a Claude Code edit-time hook with `--hook` | Each project's pre-commit hook and `.claude/hooks/` |
 
 Dependencies: `python3` (stdlib only) and `git`. Check with `command -v python3 git`.
 
@@ -120,6 +120,20 @@ chmod +x .git/hooks/pre-commit
 If `.git/hooks/pre-commit` already exists, don't replace it. Copy the script to `.git/hooks/todo_check.py`, then add a line `python3 "$(git rev-parse --git-dir)/hooks/todo_check.py" || exit 1` to the existing hook. If the project uses the `pre-commit` framework, add a `local` hook with `entry: python3 path/to/todo_check.py`, `language: system`, and `pass_filenames: false`.
 
 Check: stage a file with a bare `# TODO fix` line and run `.git/hooks/pre-commit; echo "exit $?"`. It should list the line and print `exit 1`. Unstage the file afterwards.
+
+**Claude Code, at edit time.** The pre-commit check fires late, after the agent moves on. The `--hook` mode blocks the edit itself, so the agent names a ticket on the spot. The `claude-settings.json` from step 2 already has the entry. Copy the script next to the archive guard:
+
+```bash
+cp "$SWEEP/hooks/todo_check.py" .claude/hooks/
+chmod +x .claude/hooks/todo_check.py
+```
+
+Check:
+
+```bash
+printf '%s' '{"tool_name":"Edit","tool_input":{"file_path":"a.py","old_string":"x","new_string":"x\n# TODO fix"}}' | python3 .claude/hooks/todo_check.py --hook; echo "exit $?"
+# exit 2
+```
 
 ## Use
 
