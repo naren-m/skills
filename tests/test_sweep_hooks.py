@@ -66,6 +66,9 @@ def test_cursor_archive_guard(tool, tool_input, permission):
         ("# TODO(CSCab12345) remove workaround", True),
         ("# TODO https://github.com/o/r/issues/7", True),
         ("todo_items = []", True),
+        ("# TODO(tasks-orf.2): final token", True),
+        ("# TODO re-run this", False),
+        ("- `TODO` and `FIXME` comments", True),
     ],
 )
 def test_todo_check_requires_ticket_id_on_new_todos(tmp_path, line, passes):
@@ -79,3 +82,32 @@ def test_todo_check_requires_ticket_id_on_new_todos(tmp_path, line, passes):
     )
 
     assert (result.returncode == 0) == passes
+
+
+def run_todo_hook(event):
+    return subprocess.run(
+        [sys.executable, str(TODO_CHECK), "--hook"], input=json.dumps(event), capture_output=True, text=True
+    )
+
+
+@pytest.mark.parametrize(
+    "tool, tool_input, blocked",
+    [
+        ("Edit", {"file_path": "a.py", "old_string": "x", "new_string": "x\n# TODO: later"}, True),
+        ("Edit", {"file_path": "a.py", "old_string": "x", "new_string": "x\n# TODO(#9): later"}, False),
+        ("Edit", {"file_path": "a.py", "old_string": "# TODO: old\nx", "new_string": "x\n# TODO: old"}, False),
+        ("MultiEdit", {"file_path": "a.py", "edits": [{"old_string": "x", "new_string": "// FIXME y"}]}, True),
+        ("Write", {"file_path": "/nonexistent/a.py", "content": "# TODO: z"}, True),
+        ("Bash", {"command": "echo '# TODO: z'"}, False),
+    ],
+)
+def test_todo_hook_blocks_new_bare_todos_at_edit_time(tool, tool_input, blocked):
+    result = run_todo_hook({"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": tool_input})
+    assert result.returncode == (2 if blocked else 0)
+
+
+def test_todo_hook_write_keeps_existing_bare_todos(tmp_path):
+    f = tmp_path / "a.py"
+    f.write_text("# TODO: old\n")
+    event = {"tool_name": "Write", "tool_input": {"file_path": str(f), "content": "# TODO: old\nx = 1\n"}}
+    assert run_todo_hook(event).returncode == 0

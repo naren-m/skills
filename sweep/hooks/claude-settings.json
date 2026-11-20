@@ -1,6 +1,8 @@
 {
   "permissions": {
-    "deny": ["Read(./archive/**)"]
+    "deny": [
+      "Read(./archive/**)"
+    ]
   },
   "hooks": {
     "PreToolUse": [
@@ -10,6 +12,15 @@
           {
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/archive_guard.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/todo_check.py\" --hook"
           }
         ]
       }
