@@ -109,3 +109,37 @@ To archive a repo file:
 Do not commit or push. The user decides that.
 
 Done when every approved row matches the tree or tracker, unapproved rows are unchanged, and each archive deny entry exists.
+
+## Prevent
+
+`todo_ref_check.py` in this skill blocks new `TODO` and `FIXME` comments that name no issue. A TODO with an ID can be proven stale later. A bare TODO cannot. Existing bare TODOs pass. Only new ones are blocked.
+
+Offer to install it when the sweep found bare TODOs. Install it only after the user says yes.
+
+Claude Code, in the project's `.claude/settings.json`. Use the path where this skill is installed:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [{ "type": "command", "command": "python3 ~/.claude/skills/sweep/todo_ref_check.py --hook" }]
+      }
+    ]
+  }
+}
+```
+
+Exit code 2 blocks the edit and tells the agent to name an issue.
+
+Any agent or person, as a git pre-commit hook:
+
+```sh
+printf '#!/bin/sh\nexec python3 ~/.claude/skills/sweep/todo_ref_check.py --staged\n' > .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+If `.git/hooks/pre-commit` already exists, add the `exec` line's command to it. Do not overwrite it.
+
+Accepted IDs: `#123`, `bug/123`, `PROJ-42`, `tasks-orf.2`, or a URL. For another ID format, set `SWEEP_TODO_REF_REGEX`.
